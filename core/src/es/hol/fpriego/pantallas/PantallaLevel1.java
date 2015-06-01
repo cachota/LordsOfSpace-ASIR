@@ -36,6 +36,7 @@ import es.hol.fpriego.Main;
 import es.hol.fpriego.entidades.Asteroide;
 import es.hol.fpriego.entidades.DisparoPlayer;
 import es.hol.fpriego.entidades.Invader;
+import es.hol.fpriego.entidades.NaveEnemiga1;
 import es.hol.fpriego.entidades.Player;
 import es.hol.fpriego.entidades.PowerUp;
 
@@ -65,8 +66,9 @@ public class PantallaLevel1 implements Screen{
 	private Label textGameOver, textPausa;
 	private Sound sonidoBoton, sonidoPowDisp, sonidoPowShield, sonidoPowLoose;
 	private Array<PowerUp> powerUps;
-	private Array<Invader> invadersNivel_1_1;
+	private Array<Invader> invaders;
 	private Array<Asteroide> asteroides;
+	private Array<NaveEnemiga1> naves1;
 	private boolean maxInvader;
 	private int contadorInvaders;
 	
@@ -86,8 +88,9 @@ public class PantallaLevel1 implements Screen{
 		estadosLevel1 = ESTADOS_LEVEL_1.INICIO;
 		velInvaders = 10;
 		powerUps = new Array<PowerUp>();
-		invadersNivel_1_1 = new Array<Invader>();
+		invaders = new Array<Invader>();
 		asteroides = new Array<Asteroide>();
+		naves1 = new Array<NaveEnemiga1>();
 		maxInvader = false;
 		
 		sonidoBoton = manager.get("sound/sfx-twoTone.ogg", Sound.class);
@@ -337,14 +340,14 @@ public class PantallaLevel1 implements Screen{
 				if(contadorInvaders>=64){
 					maxInvader = true;
 				}
-				else if(invadersNivel_1_1.size == 0){
+				else if(invaders.size == 0){
 					Invader in = new Invader(atlas, 1, 2);
 					in.setPosition(100, Constantes.ALTO_PANTALLA);
-					invadersNivel_1_1.add(in);
+					invaders.add(in);
 					gameStage.addActor(in);
 				}
 				
-				for(Invader in:invadersNivel_1_1){
+				for(Invader in:invaders){
 					
 					if(!in.isMuerto()){
 						in.mover(0, -5);
@@ -359,7 +362,7 @@ public class PantallaLevel1 implements Screen{
 					}
 					
 					if(in.isFinaliza()){
-						invadersNivel_1_1.removeValue(in, true);
+						invaders.removeValue(in, true);
 						if(!maxInvader){
 							anadeInvader();
 							contadorInvaders++;
@@ -367,7 +370,7 @@ public class PantallaLevel1 implements Screen{
 					}
 				}
 				
-				if(invadersNivel_1_1.size == 0){
+				if(invaders.size == 0){
 					estadosLevel1 = ESTADOS_LEVEL_1.NIVEL_1_2;
 					contadorInvaders = 0;
 					maxInvader = false;
@@ -378,14 +381,14 @@ public class PantallaLevel1 implements Screen{
 			
 			else if(estadosLevel1 == ESTADOS_LEVEL_1.NIVEL_1_2){
 				
-				if(invadersNivel_1_1.size == 0 && contadorInvaders==0){
+				if(invaders.size == 0 && contadorInvaders==0){
 					Invader in = new Invader(atlas, 1, 2);
 					in.setPosition(400, Constantes.ALTO_PANTALLA);
-					invadersNivel_1_1.add(in);
+					invaders.add(in);
 					gameStage.addActor(in);
 				}
 				
-				for(Invader in:invadersNivel_1_1){
+				for(Invader in:invaders){
 					
 					if(!in.isMuerto()){
 						in.moverA(new Vector2(player.getX(),player.getY()));
@@ -396,7 +399,7 @@ public class PantallaLevel1 implements Screen{
 					}
 					
 					if(in.isFinaliza()){
-						invadersNivel_1_1.removeValue(in, true);
+						invaders.removeValue(in, true);
 						if(!maxInvader){
 							anadeInvader();
 							contadorInvaders++;
@@ -404,12 +407,12 @@ public class PantallaLevel1 implements Screen{
 					}
 				}
 				
-				if(invadersNivel_1_1.size == 0 && contadorInvaders>=5){
+				if(invaders.size == 0 && contadorInvaders>=5){
 					estadosLevel1 = ESTADOS_LEVEL_1.NIVEL_2_1;
 					avanza = true;
 					player.setLevel1(false);
 				}
-				else if(invadersNivel_1_1.size > 0 && contadorInvaders>=30){
+				else if(invaders.size > 0 && contadorInvaders>=30){
 					maxInvader = true;
 				}
 				
@@ -426,6 +429,23 @@ public class PantallaLevel1 implements Screen{
 							asteroides.add(aste);
 							gameStage.addActor(aste);
 						}
+						
+						for(int i=0;i<5;i++){
+							NaveEnemiga1 nav = new NaveEnemiga1(atlas);
+							naves1.add(nav);
+							if(i%2==0){
+								nav.setPosition(0-nav.getWidth(), MathUtils.random(1536, 1980));
+								nav.setVelocidad(MathUtils.random(2, 4));
+								nav.setDirDcha(true);
+							}
+							else{
+								nav.setPosition(764, MathUtils.random(1536, 1980));
+								nav.setVelocidad(-(MathUtils.random(2, 4)));
+								nav.setDirDcha(false);
+							}
+							gameStage.addActor(nav);
+						}
+						
 						player.setLevel2(true);
 					}
 				}
@@ -441,6 +461,13 @@ public class PantallaLevel1 implements Screen{
 						if(as.isFinaliza()){
 							as.recolocar();
 						}						
+					}
+					
+					for(NaveEnemiga1 nav:naves1){
+						
+						if(!nav.isMuerto()){
+							nav.mover();
+						}
 					}
 					
 				}
@@ -580,7 +607,7 @@ public class PantallaLevel1 implements Screen{
 			Invader inTemp = new Invader(atlas, MathUtils.random(1, 2),2);
 			inTemp.setPosition(MathUtils.random(0, 704), Constantes.ALTO_PANTALLA);
 			inTemp.setRect(inTemp.getX(), inTemp.getY());
-			invadersNivel_1_1.add(inTemp);
+			invaders.add(inTemp);
 			gameStage.addActor(inTemp);
 			if(estadosLevel1 == ESTADOS_LEVEL_1.NIVEL_1_2){
 				inTemp.setVelocidad(inTemp.getVelocidad()+(MathUtils.random(100)));
