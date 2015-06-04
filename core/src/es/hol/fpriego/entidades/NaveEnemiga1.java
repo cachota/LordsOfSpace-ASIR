@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 
 public class NaveEnemiga1 extends EnemigoBase{
 
@@ -19,6 +20,7 @@ public class NaveEnemiga1 extends EnemigoBase{
 	private TextureRegion[] trExplota;
 	private Animation animExplota;
 	private float estado;
+	private Array<DisparoEnemigo> disparos;
 	
 	public NaveEnemiga1(TextureAtlas atlas) {
 		
@@ -31,6 +33,7 @@ public class NaveEnemiga1 extends EnemigoBase{
 		estado = 0;
 		velocidad = 2;
 		trExplota = new TextureRegion[16];
+		disparos = new Array<DisparoEnemigo>();
 		
 		cargarImagenes();
 		
@@ -54,6 +57,16 @@ public class NaveEnemiga1 extends EnemigoBase{
 			
 			if(animExplota.isAnimationFinished(estado)){
 				finaliza = true;
+				estado = 0;
+			}
+		}
+		else if(tipo == 2){
+			
+			estado += Gdx.graphics.getDeltaTime();
+			batch.draw(animExplota.getKeyFrame(estado, false),getX(),getY());
+			
+			if(animExplota.isAnimationFinished(estado)){
+				remove();
 			}
 		}
 		
@@ -77,6 +90,16 @@ public class NaveEnemiga1 extends EnemigoBase{
 			tipo = 3;
 		}
 		
+		if(disparos.size > 0){
+			for(int i=0;i<disparos.size;i++){
+				DisparoEnemigo d = disparos.get(i);
+				if(d.getY() < 1000){
+					d.remove();
+					disparos.removeIndex(i);
+				}
+			}
+		}
+		
 		super.act(delta);
 	}
 	
@@ -84,12 +107,20 @@ public class NaveEnemiga1 extends EnemigoBase{
 		setX(getX() + velocidad);
 	}
 	
-	private void recolocarIz(){
+	public void recolocarIz(){
 		setPosition(0-getWidth(), MathUtils.random(1536, 1980));
+		tipo = 1;
+		vida = 3;
+		muerto = false;
+		finaliza = false;
 	}
 	
-	private void recolocarDch(){
+	public void recolocarDch(){
 		setPosition(764, MathUtils.random(1536, 1980));
+		tipo = 1;
+		vida = 3;
+		muerto = false;
+		finaliza = false;
 	}
 	
 	private void cargarImagenes(){
@@ -168,5 +199,13 @@ public class NaveEnemiga1 extends EnemigoBase{
 
 	public void setDirDcha(boolean dirDcha) {
 		this.dirDcha = dirDcha;
+	}
+
+	public Array<DisparoEnemigo> getDisparos() {
+		return disparos;
+	}
+
+	public void setTipo(int tipo) {
+		this.tipo = tipo;
 	}
 }

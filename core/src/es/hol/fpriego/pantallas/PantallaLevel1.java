@@ -34,6 +34,7 @@ import es.hol.fpriego.Constantes;
 import es.hol.fpriego.Constantes.ESTADOS_LEVEL_1;
 import es.hol.fpriego.Main;
 import es.hol.fpriego.entidades.Asteroide;
+import es.hol.fpriego.entidades.DisparoEnemigo;
 import es.hol.fpriego.entidades.DisparoPlayer;
 import es.hol.fpriego.entidades.Invader;
 import es.hol.fpriego.entidades.NaveEnemiga1;
@@ -147,7 +148,8 @@ public class PantallaLevel1 implements Screen{
 		
 		if(Gdx.app.getType()==ApplicationType.Android){
 			
-			pad = new Touchpad(1, skin);
+			pad = new Touchpad(0.5f, skin);
+			pad.setScale(2f);
 			pad.setPosition(100, 100);
 			botonDisparo = new TextButton("FIRE", skin);
 			botonDisparo.setPosition(500, 80);
@@ -434,12 +436,12 @@ public class PantallaLevel1 implements Screen{
 							NaveEnemiga1 nav = new NaveEnemiga1(atlas);
 							naves1.add(nav);
 							if(i%2==0){
-								nav.setPosition(0-nav.getWidth(), MathUtils.random(1536, 1980));
+								nav.setPosition(-(MathUtils.random(0+nav.getWidth(),100)),MathUtils.random(1536, 1980));
 								nav.setVelocidad(MathUtils.random(2, 4));
 								nav.setDirDcha(true);
 							}
 							else{
-								nav.setPosition(764, MathUtils.random(1536, 1980));
+								nav.setPosition(MathUtils.random(764, 850), MathUtils.random(1536, 1980));
 								nav.setVelocidad(-(MathUtils.random(2, 4)));
 								nav.setDirDcha(false);
 							}
@@ -447,32 +449,72 @@ public class PantallaLevel1 implements Screen{
 						}
 						
 						player.setLevel2(true);
+						contadorInvaders = 0;
 					}
 				}
 				
 				else{
 					
-					for(Asteroide as:asteroides){
+					if(contadorInvaders == 80){
 						
-						if(!as.isMuerto()){
-							colisionAsteroide(as);
+						for(Asteroide as:asteroides){
+							as.setTipo(4);
 						}
+						asteroides.clear();
 						
-						if(as.isFinaliza()){
-							as.recolocar();
-						}						
+						for(NaveEnemiga1 nav:naves1){
+							nav.setTipo(2);
+						}
+						naves1.clear();
+						
+						estadosLevel1 = ESTADOS_LEVEL_1.FINAL;
 					}
 					
-					for(NaveEnemiga1 nav:naves1){
+					else{
 						
-						if(!nav.isMuerto()){
-							nav.mover();
+						for(Asteroide as:asteroides){
+							
+							if(!as.isMuerto()){
+								colisionAsteroide(as);
+							}
+							
+							if(as.isFinaliza()){
+								as.recolocar();
+							}						
+						}
+						
+						for(NaveEnemiga1 nav:naves1){
+							
+							if(!nav.isMuerto()){
+								nav.mover();
+								colisionEnemigo(nav);
+								if(MathUtils.round(nav.getX()) == MathUtils.round(player.getX()) || 
+										MathUtils.round(nav.getX()) == MathUtils.round(player.getX())+1){
+									DisparoEnemigo d = new DisparoEnemigo(1, atlas);
+									d.setPosition(nav.getX()+2, nav.getY()-nav.getHeight());
+									nav.getDisparos().add(d);
+									gameStage.addActor(d);
+								}
+							}
+							
+							if(nav.isFinaliza()){
+								if(nav.isDirDcha())
+									nav.recolocarDch();
+								else
+									nav.recolocarIz();
+							}
+							
+							colisionDisparoEnem(nav.getDisparos());
 						}
 					}
-					
 				}
 				
 				compruebaPowUp();
+			}
+			
+			else if(estadosLevel1 == ESTADOS_LEVEL_1.FINAL){
+				
+				game.setScreen(game.getpFinal1());
 			}
 			
 			else if(estadosLevel1 == ESTADOS_LEVEL_1.GAME_OVER){
@@ -515,6 +557,22 @@ public class PantallaLevel1 implements Screen{
 		}
 	}
 	
+	private void generaPowUp(NaveEnemiga1 in){
+		
+		int rand = MathUtils.random(0, 1000);
+		
+		if(rand == 0){
+			int randT = MathUtils.random(1,2);
+			PowerUp p = new PowerUp(atlas, randT);
+			
+			p.setPosition(in.getX(), in.getY());
+			
+			powerUps.add(p);
+			gameStage.addActor(p);
+			in.setPowCheck(true);
+		}
+	}
+	
 	private void compruebaPowUp(){
 		
 		if(powerUps.size>0){
@@ -532,6 +590,25 @@ public class PantallaLevel1 implements Screen{
 				}
 			}
 		}
+	}
+	
+	private void colisionDisparoEnem(Array<DisparoEnemigo> disparos){
+		
+		if(disparos.size > 0){
+			for(int i=0;i<disparos.size;i++){
+				DisparoEnemigo d = disparos.get(i);
+				if(d.getRect().overlaps(player.getRect())){
+					d.setTipo(4);
+					d.setVelocidad(0);
+					disparos.removeIndex(i);
+					player.setVida(player.getVida()-2);
+					quitarVida(2);
+					if(player.getVida()>0)
+						player.parpadeo();
+				}
+			}
+		}
+		
 	}
 	
 	private void colisionInvader(Invader in){
@@ -569,6 +646,42 @@ public class PantallaLevel1 implements Screen{
 		}
 	}
 	
+	private void colisionEnemigo(NaveEnemiga1 in){
+		
+		for(int i=0;i<player.getDisparos().size;i++){
+			DisparoPlayer d = player.getDisparos().get(i);
+			if(d.getRect().overlaps(in.getRect()) && in.getVida()>0){
+				d.setTipo(4);
+				d.setVelocidad(0);
+				player.getDisparos().removeIndex(i);
+				in.setVida(in.getVida()-d.getDano());
+				contadorInvaders++;
+			}
+		}
+		
+		if(player.isTieneEscudo()){
+			if(in.getRect().overlaps(player.getBarrera().getRect()) && in.getVida()>0){
+				in.setVida(0);
+				player.getBarrera().remove();
+				player.setTieneEscudo(false);
+				sonidoPowLoose.play();
+			}
+		}
+		else if(in.getRect().overlaps(player.getRect()) && in.getVida()>0 && player.getVida()>0){
+			in.setVida(0);
+			player.setVida(player.getVida()-2);
+			if(player.getVida()>0)
+				player.parpadeo();
+			if(player.getPowDisparo() > 1)
+				player.setPowDisparo(player.getPowDisparo()-1);
+			quitarVida(2);
+		}
+		
+		if(in.isMuerto() && !in.isPowCheck()){
+			generaPowUp(in);
+		}
+	}
+	
 	private void colisionAsteroide(Asteroide as){
 		
 		for(int i=0;i<player.getDisparos().size;i++){
@@ -577,7 +690,8 @@ public class PantallaLevel1 implements Screen{
 				d.setTipo(4);
 				d.setVelocidad(0);
 				player.getDisparos().removeIndex(i);
-				as.setVida(as.getVida()-d.getDano());				
+				as.setVida(as.getVida()-d.getDano());
+				contadorInvaders++;
 			}
 		}
 		
@@ -632,6 +746,16 @@ public class PantallaLevel1 implements Screen{
 			}
 		}
 		
+		if(naves1.size > 0){
+			for(int i=0;i<naves1.size;i++){
+				if(naves1.get(i).getDisparos().size > 0){
+					for(int j=0;j<naves1.get(i).getDisparos().size;j++){
+						naves1.get(i).getDisparos().get(j).setPaused(true);
+					}
+				}
+			}
+		}
+		
 	}
 	
 	private void reanudarActores(){
@@ -648,6 +772,16 @@ public class PantallaLevel1 implements Screen{
 		if(asteroides.size > 0){
 			for(int i=0;i<asteroides.size;i++){
 				asteroides.get(i).setPausa(false);
+			}
+		}
+		
+		if(naves1.size > 0){
+			for(int i=0;i<naves1.size;i++){
+				if(naves1.get(i).getDisparos().size > 0){
+					for(int j=0;j<naves1.get(i).getDisparos().size;j++){
+						naves1.get(i).getDisparos().get(j).setPaused(false);
+					}
+				}
 			}
 		}
 	}

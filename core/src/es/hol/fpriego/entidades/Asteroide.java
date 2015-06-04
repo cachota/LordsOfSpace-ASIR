@@ -72,6 +72,16 @@ public class Asteroide extends EnemigoBase{
 			
 			if(animExplota.isAnimationFinished(estado)){
 				setFinaliza(true);
+				estado = 0;
+			}
+		}
+		else if(tipo == 4){
+			
+			estado += Gdx.graphics.getDeltaTime();
+			batch.draw(animExplota.getKeyFrame(estado, false),getX(),getY());
+			
+			if(animExplota.isAnimationFinished(estado)){
+				remove();
 			}
 		}
 	}
@@ -200,6 +210,10 @@ public class Asteroide extends EnemigoBase{
 
 	public Rectangle getRect() {
 		return rect;
+	}
+
+	public void setTipo(int tipo) {
+		this.tipo = tipo;
 	}
 	
 }

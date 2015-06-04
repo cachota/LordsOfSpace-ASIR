@@ -129,32 +129,33 @@ public class Player extends Actor{
 					disparar();
 				}
 				
-				if(getX()<0){
-					setX(0);
-				}
+			}
+			
+			if(getX()<0){
+				setX(0);
+			}
+			
+			if(getX()>Constantes.ANCHO_PANTALLA - getWidth()){
+				setX(Constantes.ANCHO_PANTALLA - getWidth());
+			}
+			
+			if(getY()<0){
+				setY(0);
+			}
+			
+			if(level1){
 				
-				if(getX()>Constantes.ANCHO_PANTALLA - getWidth()){
-					setX(Constantes.ANCHO_PANTALLA - getWidth());
+				if(getY()>Constantes.ALTO_PANTALLA-getHeight()){
+					setY(Constantes.ALTO_PANTALLA-getHeight());
 				}
-				
-				if(getY()<0){
-					setY(0);
+			}
+			
+			else if(level2){
+				if(getY()<Constantes.ALTO_PANTALLA){
+					setY(Constantes.ALTO_PANTALLA);
 				}
-				
-				if(level1){
-					
-					if(getY()>Constantes.ALTO_PANTALLA-getHeight()){
-						setY(Constantes.ALTO_PANTALLA-getHeight());
-					}
-				}
-				
-				else if(level2){
-					if(getY()<Constantes.ALTO_PANTALLA){
-						setY(Constantes.ALTO_PANTALLA);
-					}
-					else if(getY()>Constantes.ALTO_MAPA-getHeight()){
-						setY(Constantes.ALTO_MAPA-getHeight());
-					}
+				else if(getY()>Constantes.ALTO_MAPA-getHeight()){
+					setY(Constantes.ALTO_MAPA-getHeight());
 				}
 			}
 		}

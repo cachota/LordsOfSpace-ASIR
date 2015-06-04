@@ -105,8 +105,7 @@ public class PantallaMenu implements Screen{
 
 					@Override
 					public boolean act(float delta) {
-						game.getRecursos().loadMap1();
-						game.setScreen(game.getLevel1());
+						game.setScreen(game.getpCreditos());
 						return false;
 					}
 					
